@@ -8,8 +8,17 @@
 
 import UIKit
 
-class SetCardView: UIView {
+class SetBoardView: UIView {
+    var viewcontroller = ViewController()
 
+    override func setNeedsLayout() {
+        super.layoutSubviews()
+        
+    }
+    
+    override func setNeedsDisplay() {
+        
+    }
     /*
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
