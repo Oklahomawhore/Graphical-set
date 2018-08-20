@@ -9,22 +9,20 @@
 import UIKit
 
 class SetBoardView: UIView {
-    var viewcontroller = ViewController()
-
-    override func setNeedsLayout() {
-        super.layoutSubviews()
-        
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
     }
     
-    override func setNeedsDisplay() {
-        
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
     }
+    
     /*
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
-        // Drawing code
+       
     }
     */
-
 }

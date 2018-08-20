@@ -9,13 +9,272 @@
 import UIKit
 
 class CardView: UIView {
-
-    /*
+    private var card: Card?
+    private var path = UIBezierPath()
+    private var roundedRect = UIBezierPath()
+    private var shapeColor = UIColor()
+    
+    var isSelected: Bool  = false {
+        didSet{
+            UIColor.red.setStroke()
+            roundedRect.stroke()
+            setNeedsDisplay()
+        }
+        
+    }
+    var isSet: Bool = false {
+        didSet {
+            UIColor.green.setStroke()
+            roundedRect.stroke()
+            setNeedsDisplay()
+        }
+    }
+    
+    
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        setNeedsDisplay()
+        setNeedsLayout()
+    }
+    
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
+        roundedRect = UIBezierPath(roundedRect: bounds, cornerRadius: 16.0)
+        roundedRect.addClip()
+        UIColor.white.setFill()
+        UIColor.blue.setStroke()
+        roundedRect.lineWidth = 8.0
+        roundedRect.fill()
+        roundedRect.stroke()
+        
+        
+        
+//        if let card = card {
+//            switch card.symbol {
+//            case .circle:
+//                path.addArc(withCenter: CGPoint(x: bounds.midX,y: bounds.midY), radius: circleRadius, startAngle: 0.0, endAngle: 2 * CGFloat.pi, clockwise: true)
+//            case .square:
+//                path.move(to: singleMidPoint.offsetBy(dx: -1/2 * squareLength, dy: -1/2 * squareLength))
+//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * squareLength, dy: -1/2 * squareLength))
+//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * squareLength, dy: 1/2 * squareLength))
+//                path.addLine(to: singleMidPoint.offsetBy(dx: -1/2 * squareLength, dy: 1/2 * squareLength))
+//                path.close()
+//            case .triangle:
+//                path.move(to: singleMidPoint.offsetBy(dx: 0, dy: -2/3 * triangleHeight))
+//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * triangleLength, dy: 1/3 * triangleHeight))
+//                path.addLine(to: singleMidPoint.offsetBy(dx: -1/2 * triangleLength, dy: 1/3 * triangleHeight))
+//                path.close()
+//            }
+//        }
         // Drawing code
+        print(card!)
+        drawNumberOfObject()
+        drawObject()
+    }
+    
+    private func drawObject() {
+        if let card = card {
+            switch card.color {
+            case .black:
+                shapeColor = UIColor.black
+            case .blue:
+                shapeColor = UIColor.blue
+            case .red:
+                shapeColor = UIColor.red
+            }
+            
+            path.addClip()
+            
+            switch card.shading {
+            case .open:
+                UIColor.white.setFill()
+                shapeColor.setStroke()
+                path.fill()
+                path.stroke()
+            case .solid:
+                shapeColor.setFill()
+                shapeColor.setStroke()
+                path.fill()
+                path.stroke()
+            case .striped:
+                shapeColor.setStroke()
+                
+                for y in stride(from: 0, to: bounds.height, by: bounds.height / 30) {
+                    let path = UIBezierPath()
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: y, y: 0))
+                    path.stroke()
+                }
+                
+                for x in stride(from: 0, to: bounds.width, by: bounds.height / 30) {
+                    let path = UIBezierPath()
+                    path.move(to: CGPoint(x: x, y: bounds.height))
+                    path.addLine(to: CGPoint(x: x + bounds.height, y: 0))
+                    path.stroke()
+                }
+                
+                
+            }
+            
+            path.stroke()
+        }
+        
+        
+    }
+    
+    private func drawNumberOfObject() {
+        if let card = card {
+            var rectArray = [CGRect]()
+            switch card.number {
+            case .one:
+                rectArray = calcRect(numberOFSymbols: 1)
+            case .three:
+                rectArray = calcRect(numberOFSymbols: 2)
+            case .two:
+                rectArray = calcRect(numberOFSymbols: 3)
+            }
+            
+            for index in rectArray.indices {
+                let squareLength = calcSquareLength(in: rectArray[index])
+                let circleRadius = calcCircleRadius(in: rectArray[index])
+                let triangleLength = calcTriangleLength(in: rectArray[index])
+                let triangleHeight = calcTriangleHeight(in: rectArray[index])
+                
+                
+                switch card.symbol {
+                case .circle:
+                    //path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY))
+                    path.addArc(withCenter: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY), radius: circleRadius, startAngle: 0.0, endAngle: 2 * CGFloat.pi, clockwise: true)
+                case .square:
+                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: -1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: -1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: 1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: 1/2 * squareLength))
+                    path.close()
+                case .triangle:
+                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 0, dy: -2/3 * triangleHeight))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * triangleLength, dy: 1/3 * triangleHeight))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * triangleLength, dy: 1/3 * triangleHeight))
+                    path.close()
+                } // switch on card.symbol
+            } // for index in rectArray
+            
+            
+        }// if let card = card
+    }
+    
+    convenience init(frame: CGRect, card: Card) {
+        self.init(frame: frame)
+        self.card = card
+        self.backgroundColor = UIColor.clear
+        self.contentMode = .redraw
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    
+    private struct constants {
+        static let triangleHeight:CGFloat = 180.0
+        static let triangleWidth:CGFloat = 180 * 4 / sqrt(3)
+    }
+    
+    
+}
+
+extension CardView {
+    /*  Outdated code : using calculated property to get symbol properties
+    private var squareLength:CGFloat {
+        return CGFloat(2/3 * bounds.width)
+    }
+    
+    private var triangleLength:CGFloat {
+        return CGFloat(2/3 * bounds.width)
+    }
+    
+    private var triangleHeight:CGFloat {
+        return triangleLength * (sqrt(3)/2)
+    }
+    
+    private var circleRadius:CGFloat {
+        return CGFloat(1/3 * bounds.width)
     }
     */
+    
+    //TODO: write functions to calculate symbol properties.squareLength, triangleHeight, circleRadius
+    private func calcCircleRadius(in rect:CGRect) -> CGFloat {
+        return 1/3 * rect.height
+    }
+    
+    private func calcTriangleHeight(in rect:CGRect) -> CGFloat {
+        return calcTriangleLength(in:rect) * (sqrt(3)/2)
+    }
+    
+    private func calcTriangleLength(in rect:CGRect) -> CGFloat {
+        return 2/3 * rect.height
+    }
+    
+    private func calcSquareLength(in rect:CGRect) -> CGFloat {
+        return 2/3 * rect.height
+    }
+    
+    
+    
+    private var singleMidPoint:CGPoint {
+        return CGPoint(x: bounds.midX, y: bounds.midY)
+    }
+    
+    private var twoFirstMidPoint:CGPoint {
+        return singleMidPoint.offsetBy(dx: 0, dy: -1/3 * bounds.height)
+    }
+    
+    private var twoSecondMidPoint:CGPoint {
+        return singleMidPoint.offsetBy(dx: 0, dy: 1/3 * bounds.height)
+    }
+    
+    private var threeFirstMidPoint:CGPoint {
+        return singleMidPoint.offsetBy(dx: 0, dy: -2/9 * bounds.height)
+    }
+    
+    private var threeSecondMidPoint:CGPoint {
+        return singleMidPoint
+    }
+    
+    private var threeThirdMidPoint:CGPoint {
+        return singleMidPoint.offsetBy(dx: 0, dy: 2/9 * bounds.height)
+    }
+    
+    //Try to solve number question with CGRect
+    private var singleRect:CGRect {
+        return CGRect(origin: singleMidPoint, size: CGSize(width: 2/3 * bounds.width, height: 2/3 * bounds.height))
+    }
+    
+    private func calcRect(numberOFSymbols number: Int) -> [CGRect] {
+        switch number {
+        case 1:
+            return [CGRect(origin: singleMidPoint.offsetBy(dx: -1/6 * bounds.width, dy: -1/6 * bounds.height), size: CGSize(width: 1/3 * bounds.width, height: 1/3 * bounds.height))]
+        case 2:
+            return [
+                CGRect(origin: singleMidPoint.offsetBy(dx: -1/3 * bounds.width, dy: -1/3 * bounds.height), size: CGSize(width: 2/3 * bounds.width, height: 1/3 * bounds.height)),
+                CGRect(origin: singleMidPoint.offsetBy(dx: -1/3 * bounds.width, dy:  0), size: CGSize(width: 2/3 * bounds.width, height: 1/3 * bounds.height)) ]
+        case 3:
+            return [CGRect(origin: singleMidPoint.offsetBy(dx: -1/3 * bounds.width, dy: -1/3 * bounds.height), size: CGSize(width: 2/3 * bounds.width, height: 2/9 * bounds.height)),
+                    CGRect(origin: singleMidPoint.offsetBy(dx: -1/3 * bounds.width, dy: -1/9 * bounds.height), size: CGSize(width: 2/3 * bounds.width, height: 2/9 * bounds.height)),
+                    CGRect(origin: singleMidPoint.offsetBy(dx: -1/3 * bounds.width, dy: 1/9 * bounds.height), size: CGSize(width: 2/3 * bounds.width, height: 2/9 * bounds.height))]
+        default:
+            return [bounds]
+        }
+    }
+}
 
+extension CGPoint {
+    func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
+        return CGPoint(x: x+dx, y: y+dy)
+    }
 }
