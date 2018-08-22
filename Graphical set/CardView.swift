@@ -14,28 +14,9 @@ class CardView: UIView {
     private var roundedRect = UIBezierPath()
     private var shapeColor = UIColor()
     
-    var isSelected: Bool  = false {
-        didSet{
-            UIColor.red.setStroke()
-            roundedRect.stroke()
-            setNeedsDisplay()
-        }
-        
-    }
-    var isSet: Bool = false {
-        didSet {
-            UIColor.green.setStroke()
-            roundedRect.stroke()
-            setNeedsDisplay()
-        }
-    }
+    var isSelected:Bool = false { didSet{ setNeedsDisplay() } }
     
-    
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        setNeedsDisplay()
-        setNeedsLayout()
-    }
+    var isSet:Bool = false { didSet { setNeedsDisplay() } }
     
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
@@ -43,30 +24,18 @@ class CardView: UIView {
         roundedRect = UIBezierPath(roundedRect: bounds, cornerRadius: 16.0)
         roundedRect.addClip()
         UIColor.white.setFill()
-        UIColor.blue.setStroke()
+        
+        if isSelected, !isSet {
+            UIColor.red.setStroke()
+        } else if isSet {
+            UIColor.green.setStroke()
+        } else {
+            UIColor.blue.setStroke()
+        }
         roundedRect.lineWidth = 8.0
         roundedRect.fill()
         roundedRect.stroke()
-        
-        
-        
-//        if let card = card {
-//            switch card.symbol {
-//            case .circle:
-//                path.addArc(withCenter: CGPoint(x: bounds.midX,y: bounds.midY), radius: circleRadius, startAngle: 0.0, endAngle: 2 * CGFloat.pi, clockwise: true)
-//            case .square:
-//                path.move(to: singleMidPoint.offsetBy(dx: -1/2 * squareLength, dy: -1/2 * squareLength))
-//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * squareLength, dy: -1/2 * squareLength))
-//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * squareLength, dy: 1/2 * squareLength))
-//                path.addLine(to: singleMidPoint.offsetBy(dx: -1/2 * squareLength, dy: 1/2 * squareLength))
-//                path.close()
-//            case .triangle:
-//                path.move(to: singleMidPoint.offsetBy(dx: 0, dy: -2/3 * triangleHeight))
-//                path.addLine(to: singleMidPoint.offsetBy(dx: 1/2 * triangleLength, dy: 1/3 * triangleHeight))
-//                path.addLine(to: singleMidPoint.offsetBy(dx: -1/2 * triangleLength, dy: 1/3 * triangleHeight))
-//                path.close()
-//            }
-//        }
+
         // Drawing code
         print(card!)
         drawNumberOfObject()
@@ -189,25 +158,7 @@ class CardView: UIView {
 }
 
 extension CardView {
-    /*  Outdated code : using calculated property to get symbol properties
-    private var squareLength:CGFloat {
-        return CGFloat(2/3 * bounds.width)
-    }
-    
-    private var triangleLength:CGFloat {
-        return CGFloat(2/3 * bounds.width)
-    }
-    
-    private var triangleHeight:CGFloat {
-        return triangleLength * (sqrt(3)/2)
-    }
-    
-    private var circleRadius:CGFloat {
-        return CGFloat(1/3 * bounds.width)
-    }
-    */
-    
-    //TODO: write functions to calculate symbol properties.squareLength, triangleHeight, circleRadius
+    //functions to calculate symbol properties.squareLength, triangleHeight, circleRadius
     private func calcCircleRadius(in rect:CGRect) -> CGFloat {
         return 1/3 * rect.height
     }
