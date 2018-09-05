@@ -22,19 +22,18 @@ class SetViewController: UIViewController {
     @IBAction func newGameButtonTouched(_ sender: Any) {
         if sender is UIButton {
             set = SetGame()
-            selectedButtons.removeAll()
             hintedButtons.removeAll()
             matchedButtons.removeAll()
             removeAllCards()
             cardViews.removeAll()
-            createCards()
+            animateDeal()
         }
     }
     
     @IBAction func dealMoreButtonTouched(_ sender: UIButton) {
         if set.dealThreeMore(){
             removeAllCards()
-            createCards()
+            updateViewFromModel()
         } else {
             let alert = UIAlertController(title: "Alert", message: "there is no more card left in the deck", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -45,7 +44,6 @@ class SetViewController: UIViewController {
     
     @IBAction func hintButtonTouched(_ sender: UIButton) {
         hintedButtons.removeAll()
-        selectedButtons.removeAll()
         clearSelection()
         set.provideHint()
         if  !set.hintCards.isEmpty {
@@ -77,11 +75,20 @@ class SetViewController: UIViewController {
     private lazy var grid = Grid(layout: .aspectRatio(0.625), frame: setBoardView.bounds)
     private var set = SetGame()
     private var cardViews = [CardView]()
-    private var selectedButtons = [CardView]()
+    private var selectedButtons: [CardView] { return cardViews.filter { $0.isSelected } }
     private var hintedButtons = [CardView]()
     private var matchedButtons = [CardView]()
     
+    private lazy var animator = UIDynamicAnimator(referenceView: self.setBoardView)
+    
+    
+    @IBOutlet weak var dealButton: UIButton!
+    @IBOutlet weak var setButton: UILabel!
+    
+    
+    
     private func chooseCard(_ sender: CardView) {
+        
         if let cardIndex = cardViews.index(of: sender) {
             if !hintedButtons.isEmpty{
                 hintedButtons.removeAll()
@@ -90,41 +97,47 @@ class SetViewController: UIViewController {
             
             let matchIndicator = set.chooseCard(at: cardIndex)
             //append selected cards
-            if !selectedButtons.contains(sender) { // if selected button is not already selected
-                if selectedButtons.count < 2 { //select new button
-                    for card in matchedButtons {
-                        card.isHidden = true
-                    }
-                    cardViews[cardIndex].isSelected = true
-                    selectedButtons.append(sender)
-                } else if selectedButtons.count == 2 { //select third button
-                    if matchIndicator { //selected third button and selected buttons are a match
-                        selectedButtons.append(sender)
-                        for card in selectedButtons {
-                            card.isSet = true
-                        }
-                    } else { // selected third button but not a match
-                        cardViews[cardIndex].isSelected = true
-                        selectedButtons.append(sender)
-                    }
-                } else { // selected more than three buttons clear selected buttons and add first one.
-                    for button in selectedButtons{
-                        cardViews[cardViews.index(of: button)!].isSelected = false
-                    }
-                    selectedButtons.removeAll()
-                    selectedButtons.append(sender)
-                    sender.isSelected = true
-                }
-            } else { //deselection utility
-                selectedButtons.remove(at: selectedButtons.index(of: sender)!)
-                sender.isSelected = false
-            }
+            cardViews[cardIndex].isSelected = !cardViews[cardIndex].isSelected
             
+            if selectedButtons.count == 3 {
+                if matchIndicator {
+                    cardViews = cardViews.map {
+                        if $0.isSelected {
+                            if let index = cardViews.index(of: $0) {
+                                $0.card = set.cardsOnTable[index]
+                            }
+                        }
+                        return $0
+                    }
+                    
+                    selectedButtons.forEach {
+                        matchedButtons.append($0)
+                        $0.isSet = true
+                        $0.isSelected = false
+                    }
+                    
+                    //TODO: store selected cards to set and fly in new cards
+                    
+                }
+            } else if selectedButtons.count == 4 {
+                    selectedButtons.forEach { $0.isSelected = false }
+                    cardViews[cardIndex].isSelected = true
+            }
+
         } else {
             print ("cardButtonTouched: selected card not in card buttons collection")
             //dose nothing
         }
         
+    }
+    
+    private func updateViewFromModel() {
+        grid.cellCount = set.cardsOnTable.count
+        cardViews.removeAll()
+        for index in set.cardsOnTable.indices {
+            cardViews += [CardView(frame: grid[index]!, card: set.cardsOnTable[index])]
+            setBoardView.addSubview(cardViews[index])
+        }
     }
     
     private func clearSelection() {
@@ -134,28 +147,46 @@ class SetViewController: UIViewController {
     }
     
     override func viewDidLoad() {
-        createCards()
-        
+        grid.cellCount = set.cardsOnTable.count
+        animateDeal()
         // Do any additional setup after loading the view.
     }
     
-    /*
-     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-     grid.frame = setBoardView.bounds
-     for index in cardViews.indices {
-     cardViews[index].frame = grid[index]!
-     cardViews[index].setNeedsLayout()
-     }
-     }
-     */
-    
-    
-    private func createCards() {
-        grid.cellCount = set.cardsOnTable.count
+    private func animateDeal() {
+        var delayTime = 0.0
         for index in set.cardsOnTable.indices {
+            delayTime = 0.1 * Double(index)
             if let cardFrame = grid[index] {
-                cardViews.append(CardView(frame: cardFrame, card: set.cardsOnTable[index]))
+                let card = CardView(frame:CGRect(x: dealButton.frame.origin.x, y: dealButton.frame.origin.y, width: cardFrame.width, height: cardFrame.height),
+                                    card: set.cardsOnTable[index])
+                UIView.animate(withDuration: 0.7, delay: delayTime, options: .curveEaseInOut, animations: {
+                    card.frame = cardFrame
+                    },completion: { finished in
+                        UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                            card.isFaceUp = !card.isFaceUp
+                        }, completion: { finished in
+                            UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                                card.isFaceUp = !card.isFaceUp
+                            }, completion: { finished in
+                                card.isUserInteractionEnabled = true
+                            })
+                        })
+                })
+                cardViews.append(card)
                 setBoardView.addSubview(cardViews[index])
+            }
+        }
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        grid = Grid(layout: .aspectRatio(0.625), frame: setBoardView.bounds)
+        grid.cellCount = set.cardsOnTable.count
+        for index in cardViews.indices {
+            if let cardFrame = grid[index] {
+                print(index)
+                cardViews[index].frame = cardFrame
+                cardViews[index].setNeedsDisplay()
             }
         }
     }
@@ -173,7 +204,7 @@ class SetViewController: UIViewController {
     }
     
     
-    /*
+     /*
      // MARK: - Navigation
      
      // In a storyboard-based application, you will often want to do a little preparation before navigation

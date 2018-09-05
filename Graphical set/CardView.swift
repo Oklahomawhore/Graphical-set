@@ -9,10 +9,11 @@
 import UIKit
 
 class CardView: UIView {
-    private var card: Card?
-    private var path = UIBezierPath()
-    private var roundedRect = UIBezierPath()
+    var card: Card? { didSet{ setNeedsDisplay() } }
     private var shapeColor = UIColor()
+    //var UIBezierpath will cause draw twice. deleted
+    
+    var isFaceUp: Bool = true { didSet{ setNeedsDisplay() } }
     
     var isSelected:Bool = false { didSet{ setNeedsDisplay() } }
     
@@ -20,30 +21,74 @@ class CardView: UIView {
     
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
+    
     override func draw(_ rect: CGRect) {
-        roundedRect = UIBezierPath(roundedRect: bounds, cornerRadius: 16.0)
+        
+        let roundedRect = UIBezierPath(roundedRect: bounds, cornerRadius: 16.0)
         roundedRect.addClip()
         UIColor.white.setFill()
         
-        if isSelected, !isSet {
-            UIColor.red.setStroke()
-        } else if isSet {
-            UIColor.green.setStroke()
+        if isFaceUp {
+            if isSelected, !isSet {
+                UIColor.red.setStroke()
+            } else if isSet {
+                UIColor.green.setStroke()
+            } else {
+                UIColor.blue.setStroke()
+            }
+            roundedRect.lineWidth = 8.0
+            roundedRect.fill()
+            roundedRect.stroke()
+            
+            // Drawing code
+            drawObject()
         } else {
             UIColor.blue.setStroke()
+            roundedRect.lineWidth = 8.0
+            roundedRect.fill()
+            roundedRect.stroke()
         }
-        roundedRect.lineWidth = 8.0
-        roundedRect.fill()
-        roundedRect.stroke()
-
-        // Drawing code
-        print(card!)
-        drawNumberOfObject()
-        drawObject()
+        
     }
     
     private func drawObject() {
         if let card = card {
+            let path = UIBezierPath()
+            var rectArray = [CGRect]()
+            switch card.number {
+            case .one:
+                rectArray = calcRect(numberOFSymbols: 1)
+            case .three:
+                rectArray = calcRect(numberOFSymbols: 2)
+            case .two:
+                rectArray = calcRect(numberOFSymbols: 3)
+            }
+            
+            for index in rectArray.indices {
+                let squareLength = calcSquareLength(in: rectArray[index])
+                let circleRadius = calcCircleRadius(in: rectArray[index])
+                let triangleLength = calcTriangleLength(in: rectArray[index])
+                let triangleHeight = calcTriangleHeight(in: rectArray[index])
+                
+                
+                switch card.symbol {
+                case .circle:
+                    //path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY))
+                    path.addArc(withCenter: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY), radius: circleRadius, startAngle: 0.0, endAngle: 2 * CGFloat.pi, clockwise: true)
+                case .square:
+                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: -1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: -1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: 1/2 * squareLength))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: 1/2 * squareLength))
+                    path.close()
+                case .triangle:
+                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 0, dy: -2/3 * triangleHeight))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * triangleLength, dy: 1/3 * triangleHeight))
+                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * triangleLength, dy: 1/3 * triangleHeight))
+                    path.close()
+                } // switch on card.symbol
+            } // for index in rectArray
+            
             switch card.color {
             case .black:
                 shapeColor = UIColor.black
@@ -92,46 +137,6 @@ class CardView: UIView {
         
     }
     
-    private func drawNumberOfObject() {
-        if let card = card {
-            var rectArray = [CGRect]()
-            switch card.number {
-            case .one:
-                rectArray = calcRect(numberOFSymbols: 1)
-            case .three:
-                rectArray = calcRect(numberOFSymbols: 2)
-            case .two:
-                rectArray = calcRect(numberOFSymbols: 3)
-            }
-            
-            for index in rectArray.indices {
-                let squareLength = calcSquareLength(in: rectArray[index])
-                let circleRadius = calcCircleRadius(in: rectArray[index])
-                let triangleLength = calcTriangleLength(in: rectArray[index])
-                let triangleHeight = calcTriangleHeight(in: rectArray[index])
-                
-                
-                switch card.symbol {
-                case .circle:
-                    //path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY))
-                    path.addArc(withCenter: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY), radius: circleRadius, startAngle: 0.0, endAngle: 2 * CGFloat.pi, clockwise: true)
-                case .square:
-                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: -1/2 * squareLength))
-                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: -1/2 * squareLength))
-                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * squareLength, dy: 1/2 * squareLength))
-                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * squareLength, dy: 1/2 * squareLength))
-                    path.close()
-                case .triangle:
-                    path.move(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 0, dy: -2/3 * triangleHeight))
-                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: 1/2 * triangleLength, dy: 1/3 * triangleHeight))
-                    path.addLine(to: CGPoint(x: rectArray[index].midX,y: rectArray[index].midY).offsetBy(dx: -1/2 * triangleLength, dy: 1/3 * triangleHeight))
-                    path.close()
-                } // switch on card.symbol
-            } // for index in rectArray
-            
-            
-        }// if let card = card
-    }
     
     convenience init(frame: CGRect, card: Card) {
         self.init(frame: frame)

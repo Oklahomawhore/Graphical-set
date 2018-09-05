@@ -9,11 +9,6 @@
 import UIKit
 
 class SetBoardView: UIView {
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        
-    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)

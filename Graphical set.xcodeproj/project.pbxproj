@@ -66,14 +66,14 @@
 		4683F0D821206DB400077B80 /* Graphical set */ = {
 			isa = PBXGroup;
 			children = (
-				46130C7C212D564D0016063B /* Card.swift */,
-				46130C7D212D564D0016063B /* CardDeck.swift */,
-				46221CF32121ADB400E6A4C0 /* SetViewController.swift */,
 				4683F0D921206DB400077B80 /* AppDelegate.swift */,
-				4683F0DD21206DB400077B80 /* Main.storyboard */,
 				4683F0E021206DB600077B80 /* Assets.xcassets */,
 				4683F0E221206DB600077B80 /* LaunchScreen.storyboard */,
 				4683F0E521206DB600077B80 /* Info.plist */,
+				46130C7C212D564D0016063B /* Card.swift */,
+				46130C7D212D564D0016063B /* CardDeck.swift */,
+				46221CF32121ADB400E6A4C0 /* SetViewController.swift */,
+				4683F0DD21206DB400077B80 /* Main.storyboard */,
 				4683F0EE21206DD600077B80 /* SetGame.swift */,
 				4683F0F721207D5200077B80 /* Grid.swift */,
 				4683F0F321206E1200077B80 /* SetBoardView.swift */,
