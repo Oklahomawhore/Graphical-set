@@ -18,6 +18,7 @@
 		4683F0F421206E1200077B80 /* SetBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4683F0F321206E1200077B80 /* SetBoardView.swift */; };
 		4683F0F621206E2700077B80 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4683F0F521206E2700077B80 /* CardView.swift */; };
 		4683F0F821207D5300077B80 /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4683F0F721207D5200077B80 /* Grid.swift */; };
+		469252C6214211B400AB7685 /* CardBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 469252C5214211B400AB7685 /* CardBehavior.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 		4683F0F321206E1200077B80 /* SetBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetBoardView.swift; sourceTree = "<group>"; };
 		4683F0F521206E2700077B80 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		4683F0F721207D5200077B80 /* Grid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Grid.swift; path = ../../../../../Downloads/Grid.swift; sourceTree = "<group>"; };
+		469252C5214211B400AB7685 /* CardBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardBehavior.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +80,7 @@
 				4683F0F721207D5200077B80 /* Grid.swift */,
 				4683F0F321206E1200077B80 /* SetBoardView.swift */,
 				4683F0F521206E2700077B80 /* CardView.swift */,
+				469252C5214211B400AB7685 /* CardBehavior.swift */,
 			);
 			path = "Graphical set";
 			sourceTree = "<group>";
@@ -155,6 +158,7 @@
 			files = (
 				46221CF42121ADB400E6A4C0 /* SetViewController.swift in Sources */,
 				4683F0F421206E1200077B80 /* SetBoardView.swift in Sources */,
+				469252C6214211B400AB7685 /* CardBehavior.swift in Sources */,
 				46130C7F212D564D0016063B /* CardDeck.swift in Sources */,
 				46130C7E212D564D0016063B /* Card.swift in Sources */,
 				4683F0F221206DD700077B80 /* SetGame.swift in Sources */,

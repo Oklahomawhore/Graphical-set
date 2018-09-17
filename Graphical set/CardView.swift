@@ -9,11 +9,12 @@
 import UIKit
 
 class CardView: UIView {
+    
     var card: Card? { didSet{ setNeedsDisplay() } }
     private var shapeColor = UIColor()
     //var UIBezierpath will cause draw twice. deleted
     
-    var isFaceUp: Bool = true { didSet{ setNeedsDisplay() } }
+    var isFaceUp: Bool = false { didSet{ setNeedsDisplay() } }
     
     var isSelected:Bool = false { didSet{ setNeedsDisplay() } }
     

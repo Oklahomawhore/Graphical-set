@@ -8,7 +8,7 @@
 
 import UIKit
 
-class SetViewController: UIViewController {
+class SetViewController: UIViewController, UIDynamicAnimatorDelegate {
     
     @IBOutlet weak var setBoardView: SetBoardView! {
         didSet{
@@ -22,6 +22,7 @@ class SetViewController: UIViewController {
     @IBAction func newGameButtonTouched(_ sender: Any) {
         if sender is UIButton {
             set = SetGame()
+            grid.cellCount = 12
             hintedButtons.removeAll()
             matchedButtons.removeAll()
             removeAllCards()
@@ -31,9 +32,38 @@ class SetViewController: UIViewController {
     }
     
     @IBAction func dealMoreButtonTouched(_ sender: UIButton) {
-        if set.dealThreeMore(){
-            removeAllCards()
-            updateViewFromModel()
+        if set.dealThreeMore() {
+            var delay = 0.0
+            grid.cellCount = cardViews.count + 3
+            
+            for index in cardViews.indices {
+                UIView.transition(with: self.cardViews[index], duration: 0.6, options: .curveEaseInOut,
+                                  animations: {
+                                    self.cardViews[index].frame = self.grid[index]!
+                })
+            }
+            for index in  set.cardsOnTable.endIndex - 3 ... set.cardsOnTable.endIndex - 1{
+                if let cardFrame = grid[index] {
+                    let card = CardView(frame: CGRect(origin: self.dealButton.frame.origin , size: cardFrame.size),
+                                        card: self.set.cardsOnTable[index])
+                    cardViews += [card]
+                    delay = 0.1 * Double(cardViews.index(of: card)! - (set.cardsOnTable.count - 3))
+                    print(cardViews.index(of: card)!)
+                    print(delay)
+                    setBoardView.addSubview(card)
+                }
+                UIView.animate(withDuration: 0.6, delay: delay, options: .curveEaseInOut, animations: {
+                    self.cardViews[index].frame = self.grid[index]!
+                }, completion: { finished in
+                    UIView.transition(with: self.cardViews[index], duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                        self.cardViews[index].isFaceUp = !self.cardViews[index].isFaceUp
+                    }, completion: { finished in
+                        self.cardViews[index].isUserInteractionEnabled = true
+                    })
+                })
+            }
+            
+            
         } else {
             let alert = UIAlertController(title: "Alert", message: "there is no more card left in the deck", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -78,13 +108,15 @@ class SetViewController: UIViewController {
     private var selectedButtons: [CardView] { return cardViews.filter { $0.isSelected } }
     private var hintedButtons = [CardView]()
     private var matchedButtons = [CardView]()
+    private var newCards = [CardView]()
+    private var numberOfSets: Int = 0
+    private let explodeR: CGFloat = 3.0
     
-    private lazy var animator = UIDynamicAnimator(referenceView: self.setBoardView)
-    
+    private lazy var animator = UIDynamicAnimator(referenceView: view)
+    private lazy var cardBehavior = CardBehavior(in: animator)
     
     @IBOutlet weak var dealButton: UIButton!
     @IBOutlet weak var setButton: UILabel!
-    
     
     
     private func chooseCard(_ sender: CardView) {
@@ -101,29 +133,73 @@ class SetViewController: UIViewController {
             
             if selectedButtons.count == 3 {
                 if matchIndicator {
-                    cardViews = cardViews.map {
-                        if $0.isSelected {
-                            if let index = cardViews.index(of: $0) {
-                                $0.card = set.cardsOnTable[index]
-                            }
-                        }
-                        return $0
-                    }
-                    
                     selectedButtons.forEach {
+                        let index  = cardViews.index(of: $0)!
+                        
                         matchedButtons.append($0)
                         $0.isSet = true
-                        $0.isSelected = false
+                        $0.removeFromSuperview()
+                        cardViews.remove(at: index)
+                        numberOfSets += 1
+                        
+                        if let cardFrame = self.grid[index] {
+                            let cardToInsert = CardView(frame: CGRect(origin: self.dealButton.frame.origin, size: cardFrame.size), card: self.set.cardsOnTable[index])
+                            newCards += [cardToInsert]
+                            cardViews.insert(cardToInsert, at: index)
+                            setBoardView.addSubview(cardToInsert)
+                        }
                     }
+                        flyIn()
+                        flyOut()
+                        
+                        /*
+                         if let cardFrame = self.grid[index] {
+                         let cardToInsert = CardView(frame: CGRect(origin: self.dealButton.frame.origin, size: cardFrame.size), card: self.set.cardsOnTable[index])
+                         self.cardViews.remove(at: index)
+                         self.cardViews.insert(cardToInsert, at: index)
+                         let insertDelay = 1.0 * Double(index)
+                         UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 3.0, delay: insertDelay, options: [.curveEaseInOut, .beginFromCurrentState], animations: {
+                         cardToInsert.frame = cardFrame
+                         }, completion: { (position) in
+                         
+                         UIView.transition(with: cardToInsert, duration: 3.0, options: .transitionFlipFromLeft, animations: {
+                         cardToInsert.isFaceUp = true
+                         }, completion: { (finished) in
+                         self.setBoardView.addSubview(cardToInsert)
+                         cardToInsert.isUserInteractionEnabled = true
+                         })
+                         })
+                         }*/
                     
-                    //TODO: store selected cards to set and fly in new cards
-                    
+                    /*
+                    matchedButtons.forEach {
+                        let index = self.matchedButtons.index(of: $0)!
+                        let delay = 5.0 + Double(index)
+                        cardBehavior.addItem($0)
+                        UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 3.0, delay: delay, options: [.transitionFlipFromLeft, .beginFromCurrentState], animations: {
+                            self.cardViews[index].isFaceUp = false //happend intantly
+                        }, completion: { finished in
+                            self.cardBehavior.removeItem(self.cardViews[index])
+                            self.animator.removeBehavior(self.cardBehavior)
+                            let snapBehavior = UISnapBehavior(item: self.cardViews[index], snapTo: self.setButton.frame.origin)
+                            self.animator.addBehavior(snapBehavior)
+                            
+                        })
+                        
+                        setBoardView.addSubview(self.cardViews[index])
+                    }*/
                 }
+                
+                
+                
+                //TODO: store selected cards to set and fly in new cards
+                
+                
             } else if selectedButtons.count == 4 {
-                    selectedButtons.forEach { $0.isSelected = false }
-                    cardViews[cardIndex].isSelected = true
+                selectedButtons.forEach { $0.isSelected = false }
+                cardViews[cardIndex].isSelected = true
             }
-
+            
         } else {
             print ("cardButtonTouched: selected card not in card buttons collection")
             //dose nothing
@@ -131,11 +207,85 @@ class SetViewController: UIViewController {
         
     }
     
+    private func flyIn() {
+        newCards.forEach { (card) in
+            let delay = Double(newCards.index(of: card)!)
+            UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.6, delay: delay, options: .curveEaseInOut, animations: {
+                if let cardFrame = self.grid[self.cardViews.index(of: card)!] {
+                    card.frame = cardFrame
+                }
+            }, completion: { (position) in
+                UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                    card.isFaceUp = true
+                }, completion: { (finished) in
+                    card.isUserInteractionEnabled = true
+                    
+                })
+            })
+        }
+        
+        
+        newCards.removeAll()
+    }
+    
+    private func flyOut() {
+        matchedButtons.forEach { (card) in
+            
+            UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.2, delay: 0.0, options: .beginFromCurrentState, animations: {
+                let firstTransForm = CGAffineTransform(rotationAngle: (8 * CGFloat.pi).arc4random).translatedBy(x: CGFloat(100.0).arc4random, y: CGFloat(100.0).arc4random)
+                card.transform = firstTransForm
+                //card.frame = self.cardViews[index].frame.offsetBy(dx: self.explodeR * sin(randomAngle), dy: self.explodeR * cos(randomAngle))
+            }, completion: { finished in
+                UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.2, delay: 0.0, options: .beginFromCurrentState, animations: {
+                    //card.transform = CGAffineTransform(rotationAngle: (8 * CGFloat.pi).arc4random).translatedBy(x: CGFloat(100.0).arc4random, y: CGFloat(100.0).arc4random)
+                    card.transform = CGAffineTransform.identity
+                }, completion: { (position) in
+                    UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.2, delay: 0.0, options: .beginFromCurrentState, animations: {
+                        card.transform = CGAffineTransform(rotationAngle: (8 * CGFloat.pi).arc4random).translatedBy(x: CGFloat(100.0).arc4random, y: CGFloat(100.0).arc4random)
+                    }, completion: { (position) in
+                        let snapBehavior = UISnapBehavior(item: card, snapTo: self.setButton.frame.origin)
+                        self.animator.addBehavior(snapBehavior)
+                        self.animator.delegate = self
+                        self.previousTransForm = CGAffineTransform.identity
+                    })
+                })
+            })
+            self.view.addSubview(card)
+
+        }
+        
+        setButton.text = "\(numberOfSets) SET"
+    }
+    
+    private var previousTransForm = CGAffineTransform()
+    
+    private func transForm(_ card:CardView) {
+        card.transform = previousTransForm.concatenating(CGAffineTransform(rotationAngle: (8 * CGFloat.pi).arc4random).translatedBy(x: CGFloat(100.0).arc4random, y: CGFloat(100.0).arc4random))
+        
+    }
+    
+    internal func dynamicAnimatorDidPause(_ animator: UIDynamicAnimator) {
+        matchedButtons.forEach { (card) in
+            
+            UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                card.isFaceUp = !card.isFaceUp
+            }, completion: { (finished) in
+                card.alpha = 0
+                card.isUserInteractionEnabled = false
+            })
+        }
+        
+       
+        matchedButtons.removeAll()
+        setButton.text = "\(numberOfSets) SET"
+    }
+    
     private func updateViewFromModel() {
         grid.cellCount = set.cardsOnTable.count
         cardViews.removeAll()
         for index in set.cardsOnTable.indices {
             cardViews += [CardView(frame: grid[index]!, card: set.cardsOnTable[index])]
+            cardViews[index].isFaceUp = true
             setBoardView.addSubview(cardViews[index])
         }
     }
@@ -152,25 +302,24 @@ class SetViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
     
+    
     private func animateDeal() {
         var delayTime = 0.0
         for index in set.cardsOnTable.indices {
             delayTime = 0.1 * Double(index)
             if let cardFrame = grid[index] {
-                let card = CardView(frame:CGRect(x: dealButton.frame.origin.x, y: dealButton.frame.origin.y, width: cardFrame.width, height: cardFrame.height),
+                let card = CardView(frame:CGRect(origin: self.dealButton.frame.origin, size: cardFrame.size),
                                     card: set.cardsOnTable[index])
                 UIView.animate(withDuration: 0.7, delay: delayTime, options: .curveEaseInOut, animations: {
                     card.frame = cardFrame
-                    },completion: { finished in
-                        UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
-                            card.isFaceUp = !card.isFaceUp
-                        }, completion: { finished in
-                            UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
-                                card.isFaceUp = !card.isFaceUp
-                            }, completion: { finished in
-                                card.isUserInteractionEnabled = true
-                            })
-                        })
+                    self.dealButton.isUserInteractionEnabled = false
+                },completion: { finished in
+                    UIView.transition(with: card, duration: 0.6, options: .transitionFlipFromLeft, animations: {
+                        card.isFaceUp = !card.isFaceUp
+                    }, completion: { finished in
+                        card.isUserInteractionEnabled = true
+                        self.dealButton.isUserInteractionEnabled = true
+                    })
                 })
                 cardViews.append(card)
                 setBoardView.addSubview(cardViews[index])
@@ -198,10 +347,6 @@ class SetViewController: UIViewController {
         cardViews.removeAll()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
     
     
      /*
@@ -214,4 +359,10 @@ class SetViewController: UIViewController {
      }
      */
     
+}
+
+extension CGFloat {
+    var arc4random: CGFloat {
+        return self * (CGFloat(arc4random_uniform(UInt32.max))/CGFloat(UInt32.max))
+    }
 }
