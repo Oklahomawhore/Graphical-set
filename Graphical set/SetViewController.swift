@@ -133,6 +133,8 @@ class SetViewController: UIViewController, UIDynamicAnimatorDelegate {
             
             if selectedButtons.count == 3 {
                 if matchIndicator {
+                    numberOfSets += 1
+
                     selectedButtons.forEach {
                         let index  = cardViews.index(of: $0)!
                         
@@ -140,7 +142,6 @@ class SetViewController: UIViewController, UIDynamicAnimatorDelegate {
                         $0.isSet = true
                         $0.removeFromSuperview()
                         cardViews.remove(at: index)
-                        numberOfSets += 1
                         
                         if let cardFrame = self.grid[index] {
                             let cardToInsert = CardView(frame: CGRect(origin: self.dealButton.frame.origin, size: cardFrame.size), card: self.set.cardsOnTable[index])
